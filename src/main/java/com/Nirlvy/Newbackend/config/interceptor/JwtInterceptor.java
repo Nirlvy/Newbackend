@@ -13,6 +13,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -20,11 +21,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Configuration
 public class JwtInterceptor implements HandlerInterceptor {
 
-    private final IUserService userService;
-
-    public JwtInterceptor(IUserService userService) {
-        this.userService = userService;
-    }
+    @Autowired
+    private IUserService userService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) {
