@@ -16,7 +16,9 @@ import java.util.Map;
  */
 public interface IProductService extends IService<Product> {
 
-    Double getTotal(String Device, String name, Integer Count);
+    Double getTotal(String device, String name, Integer count);
+
+    Product getTotalAndSeType(String device, String type);
 
     List<Map<String, Object>> getPTD(String type);
 

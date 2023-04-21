@@ -50,4 +50,16 @@ public class LogController {
         return logService.pricePage(pageNum, pageSize, type);
     }
 
+    @PostMapping("/productPage")
+    public Result productPage(@RequestParam Integer pageNum,
+                              @RequestParam Integer pageSize,
+                              @RequestParam(defaultValue = "Desc") String sort,
+                              @RequestParam(defaultValue = "value") String sortType,
+                              @RequestParam(required = false) String location,
+                              @RequestParam(required = false) String device,
+                              @RequestParam(defaultValue = "1970-1-1 0:0:0") String startTime,
+                              @RequestParam(defaultValue = "2999-12-31 23:59:59") String endTime) {
+        return logService.productPage(pageNum, pageSize, sort, sortType, location, device, startTime, endTime);
+    }
+
 }

@@ -18,7 +18,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .components(new Components())
                 .info(new Info().title("Newbackend").version("0.0.1"))
-                .addServersItem(new Server().url("http://localhost:8080"))
+                .addServersItem(new Server().url("http://8.130.47.235:8080"))
                 .components(new Components().addSecuritySchemes("HTTP login form ",
                         new SecurityScheme()
                                 .type(SecurityScheme.Type.HTTP)

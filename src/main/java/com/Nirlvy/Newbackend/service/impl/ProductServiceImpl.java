@@ -24,8 +24,20 @@ import java.util.Map;
 public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> implements IProductService {
 
     @Override
-    public Double getTotal(String Device, String Name, Integer Count) {
-        return getOne(new QueryWrapper<Product>().eq("Name", Name).eq("Device", Device)).getPrice() * Count;
+    public Double getTotal(String device, String name, Integer count) {
+        return getOne(new QueryWrapper<Product>()
+                .eq("Name", name)
+                .eq("Device", device))
+                .getPrice() * count;
+    }
+
+    @Override
+    public Product getTotalAndSeType(String device, String type) {
+        return getOne(new QueryWrapper<Product>()
+                .like("Type", type)
+                .eq("Device", device)
+                .select("Price,Type,SeType,Device")
+                .groupBy("Price,Type,SeType"));
     }
 
     @Override

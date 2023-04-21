@@ -48,4 +48,9 @@ public class FreezerController {
         return freezerService.list();
     }
 
+    @GetMapping("/locationList")
+    public Result locationList() {
+        return freezerService.locationList();
+    }
+
 }

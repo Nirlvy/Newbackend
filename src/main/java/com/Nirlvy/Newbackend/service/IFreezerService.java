@@ -22,4 +22,5 @@ public interface IFreezerService extends IService<Freezer> {
 
     List<Freezer> getFreezerLocation(String Id);
 
+    Result locationList();
 }

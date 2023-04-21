@@ -23,4 +23,6 @@ public interface ILogService extends IService<Log> {
                      String endTime);
 
     Result pricePage(Integer pageNum, Integer pageSize, String type);
+
+    Result productPage(Integer pageNum, Integer pageSize, String sort, String sortType, String location, String device, String startTime, String endTime);
 }

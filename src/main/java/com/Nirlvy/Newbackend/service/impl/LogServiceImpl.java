@@ -4,6 +4,7 @@ import com.Nirlvy.Newbackend.common.Result;
 import com.Nirlvy.Newbackend.common.ResultCode;
 import com.Nirlvy.Newbackend.entity.Freezer;
 import com.Nirlvy.Newbackend.entity.Log;
+import com.Nirlvy.Newbackend.entity.Product;
 import com.Nirlvy.Newbackend.exception.ServiceException;
 import com.Nirlvy.Newbackend.mapper.LogMapper;
 import com.Nirlvy.Newbackend.service.IFreezerService;
@@ -36,6 +37,19 @@ public class LogServiceImpl extends ServiceImpl<LogMapper, Log> implements ILogS
         this.freezerService = freezerService;
     }
 
+    private QueryWrapper<Log> pageWrapper(Integer pageNum, Integer pageSize, String device, String startTime, String endTime) {
+        if (pageNum < 0 || pageSize <= 0) {
+            throw new ServiceException(ResultCode.FAULT_PAGENUM_OR_PAGESIZE, null);
+        }
+        QueryWrapper<Log> wrapper = new QueryWrapper<Log>()
+                .eq("IO", false)
+                .between("Time", startTime, endTime);
+        if (device != null) {
+            wrapper.eq("Device", device);
+        }
+        return wrapper;
+    }
+
     @Override
     public Result top3List(List<String> top3List) {
         List<Map<String, Object>> countList = listMaps(
@@ -52,24 +66,28 @@ public class LogServiceImpl extends ServiceImpl<LogMapper, Log> implements ILogS
     @Override
     public Result pointPage(Integer pageNum, Integer pageSize, String sort, String location,
                             String device, String startTime, String endTime) {
-        if (pageNum < 0 || pageSize <= 0) {
-            throw new ServiceException(ResultCode.FAULT_PAGENUM_OR_PAGESIZE, null);
-        }
-        QueryWrapper<Log> wrapper = new QueryWrapper<Log>()
-                .eq("IO", false)
-                .between("Time", startTime, endTime);
-        if (device != null) {
-            wrapper.eq("Device", device);
-        }
+        QueryWrapper<Log> wrapper = pageWrapper(pageNum, pageSize, device, startTime, endTime);
         List<Map<String, Object>> countList = listMaps(wrapper
                 .select("Device, Product, count(*) as count")
-                .groupBy("Product"));
+                .groupBy("Device, Product"));
         List<Map<String, Object>> mapList = new ArrayList<>();
         for (Map<String, Object> countMap : countList) {
+            boolean repeat = false;
             device = (String) countMap.get("Device");
             String product = (String) countMap.get("Product");
             Long count = (Long) countMap.get("count");
             Double totalPrice = productService.getTotal(device, product, count.intValue());
+            for (Map<String, Object> repeatMap : mapList) {
+                if ((repeatMap.get("Device")).equals(device)) {
+                    repeatMap.put("Total Price", ((Number) repeatMap.get("Total Price")).doubleValue() + totalPrice);
+                    repeatMap.put("Count", ((Number) repeatMap.get("Count")).longValue() + count);
+                    repeat = true;
+                    break;
+                }
+            }
+            if (repeat) {
+                continue;
+            }
             Map<String, Object> resultMap = new HashMap<>();
             resultMap.put("Device", device);
             resultMap.put("Total Price", totalPrice);
@@ -125,7 +143,58 @@ public class LogServiceImpl extends ServiceImpl<LogMapper, Log> implements ILogS
             }
             mapList.add(resultMap);
         }
+        mapList = mapList.subList(
+                Math.min((pageNum - 1) * pageSize, mapList.size()),
+                Math.min((pageNum * pageSize), mapList.size()));
         return Result.success(mapList);
+    }
+
+    @Override
+    public Result productPage(Integer pageNum, Integer pageSize, String sort, String sortType, String location, String device, String startTime, String endTime) {
+        QueryWrapper<Log> wrapper = pageWrapper(pageNum, pageSize, device, startTime, endTime);
+        List<Map<String, Object>> countList = listMaps(wrapper
+                .select("Device, Type, count(*) as count")
+                .groupBy("Device, Type"));
+        List<Map<String, Object>> mapList = new ArrayList<>();
+        for (Map<String, Object> countMap : countList) {
+            boolean repeat = false;
+            device = (String) countMap.get("Device");
+            String type = (String) countMap.get("Type");
+            Long count = (Long) countMap.get("count");
+            Product product = productService.getTotalAndSeType(device, type);
+            for (Map<String, Object> repeatMap : mapList) {
+                if (type.equals(repeatMap.get("Type"))) {
+                    repeatMap.put("Total Price", ((Number) repeatMap.get("Total Price")).doubleValue() + product.getPrice());
+                    repeatMap.put("count", ((Number) repeatMap.get("count")).longValue() + product.getPrice());
+                    repeat = true;
+                    break;
+                }
+            }
+            if (repeat) {
+                continue;
+            }
+            countMap.put("Total Price", product.getPrice() * count);
+            countMap.put("SeType", product.getSeType());
+            countMap.remove("Device");
+            mapList.add(countMap);
+        }
+        List<Map<String, Object>> sortedList = new ArrayList<>();
+        if ("price".equals(sortType)) {
+            sortedList = new ArrayList<>(mapList.stream()
+                    .sorted(Comparator.comparingDouble(m -> (Double) m.get("Total Price")))
+                    .toList());
+        } else if ("count".equals(sortType)) {
+            sortedList = new ArrayList<>(mapList.stream()
+                    .sorted(Comparator.comparingDouble(m -> (Long) m.get("count")))
+                    .toList());
+        }
+        if ("Desc".equals(sort)) {
+            Collections.reverse(sortedList);
+        }
+        sortedList = sortedList.subList(
+                Math.min((pageNum - 1) * pageSize, sortedList.size()),
+                Math.min((pageNum * pageSize), sortedList.size()));
+        return Result.success(sortedList);
     }
 
 }

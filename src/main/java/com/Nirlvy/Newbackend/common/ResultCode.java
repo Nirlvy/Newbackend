@@ -16,7 +16,8 @@ public enum ResultCode {
     FREEZER_IS_BLANK(700, "冰柜名为空"),
     FREEZER_ALREADY_EXISTS(701, "该冰柜已存在"),
     FAULT_PAGENUM_OR_PAGESIZE(800, "错误的页码或者页面大小"),
-    TYPE_OR_DEVICE_IS_BLANK(801, "类型或设备编号为空");
+    TYPE_OR_DEVICE_IS_BLANK(801, "类型或设备编号为空"),
+    FAULT_LOCATION(802, "错误的地址");
 
     private final Integer code;
     private final String msg;

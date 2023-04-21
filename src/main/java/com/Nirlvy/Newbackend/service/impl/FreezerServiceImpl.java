@@ -11,8 +11,12 @@ import com.Nirlvy.Newbackend.service.IFreezerService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -50,13 +54,35 @@ public class FreezerServiceImpl extends ServiceImpl<FreezerMapper, Freezer> impl
 
     @Override
     public List<String> top3List(String location, String selocation) {
-        return list(new QueryWrapper<Freezer>().eq("Location", location).eq("SeLocation", selocation)).stream()
-                .map(Freezer::getId).collect(Collectors.toList());
+        List<Freezer> freezerList = list(new QueryWrapper<Freezer>().eq("Location", location).eq("SeLocation", selocation));
+        if (CollectionUtils.isEmpty(freezerList)) {
+            throw new ServiceException(ResultCode.FAULT_LOCATION, null);
+        }
+        return freezerList.stream().map(Freezer::getId).collect(Collectors.toList());
     }
 
     @Override
     public List<Freezer> getFreezerLocation(String Id) {
         return list(new QueryWrapper<Freezer>().eq("Id", Id).select("Id", "Location", "SeLocation"));
+    }
+
+    @Override
+    public Result locationList() {
+        List<Map<String, Object>> data = listMaps(new QueryWrapper<Freezer>()
+                .select("Location,SeLocation"));
+        Map<String, List<Object>> resultMap = new HashMap<>();
+        for (Map<String, Object> row : data) {
+            String key = (String) row.get("Location");
+            Object value = row.get("SeLocation");
+            if (resultMap.containsKey(key)) {
+                resultMap.get(key).add(value);
+            } else {
+                List<Object> list = new ArrayList<>();
+                list.add(value);
+                resultMap.put(key, list);
+            }
+        }
+        return Result.success(resultMap);
     }
 
 }
