@@ -20,7 +20,8 @@ public interface IFreezerService extends IService<Freezer> {
 
     List<String> top3List(String location, String selocation);
 
-    List<Freezer> getFreezerLocation(String Id);
+    List<Freezer> getFreezerLocation(String id);
 
     Result locationList();
+
 }

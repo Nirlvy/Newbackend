@@ -33,6 +33,10 @@ public class Log implements Serializable {
 
     private String product;
 
+    private Double price;
+
+    private String type;
+
     private Integer count;
 
     private LocalDateTime time;

@@ -62,8 +62,8 @@ public class FreezerServiceImpl extends ServiceImpl<FreezerMapper, Freezer> impl
     }
 
     @Override
-    public List<Freezer> getFreezerLocation(String Id) {
-        return list(new QueryWrapper<Freezer>().eq("Id", Id).select("Id", "Location", "SeLocation"));
+    public List<Freezer> getFreezerLocation(String id) {
+        return list(new QueryWrapper<Freezer>().eq("Id", id).select("Id", "Location", "SeLocation"));
     }
 
     @Override
