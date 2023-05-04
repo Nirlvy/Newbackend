@@ -2,6 +2,7 @@ package com.Nirlvy.Newbackend.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,14 +25,12 @@ public class Log implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @TableId(value = "Id", type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
     private Boolean io;
 
     private String device;
-
-    private String product;
 
     private Double price;
 
@@ -39,6 +38,7 @@ public class Log implements Serializable {
 
     private Integer count;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime time;
 
     private String cpeople;

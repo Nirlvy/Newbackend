@@ -24,4 +24,5 @@ public interface IFreezerService extends IService<Freezer> {
 
     Result locationList();
 
+    Result removeBatch(List<Integer> ids);
 }

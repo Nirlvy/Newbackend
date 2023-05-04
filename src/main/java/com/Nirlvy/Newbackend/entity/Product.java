@@ -23,14 +23,14 @@ public class Product implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @TableId(value = "Id", type = IdType.AUTO)
+    @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
     private Integer count;
 
     private Double price;
 
-    private String name;
+    private String img;
 
     private String type;
 

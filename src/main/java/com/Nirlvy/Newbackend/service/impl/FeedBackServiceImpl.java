@@ -35,9 +35,9 @@ public class FeedBackServiceImpl extends ServiceImpl<FeedBackMapper, FeedBack> i
     public Result getList(String device) {
         try {
             if ("null".equals(device)) {
-                return Result.success(list(new QueryWrapper<FeedBack>().eq("device", device)));
-            } else {
                 return Result.success(list());
+            } else {
+                return Result.success(list(new QueryWrapper<FeedBack>().like("device", device)));
             }
         } catch (Exception e) {
             throw new ServiceException(ResultCode.SYSTEM_ERROR, e);

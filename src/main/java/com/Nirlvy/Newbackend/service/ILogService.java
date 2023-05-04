@@ -18,9 +18,7 @@ public interface ILogService extends IService<Log> {
 
     Result top3List(List<String> top3List);
 
-    Result pointPage(Integer pageNum, Integer pageSize, String sort, String location, String device,
-                     String startTime,
-                     String endTime);
+    Result pointPage(Integer pageNum, Integer pageSize, String sort, String deviceOrLocation, String startTime, String endTime);
 
     Result pricePage(Integer pageNum, Integer pageSize, String type);
 
@@ -28,4 +26,5 @@ public interface ILogService extends IService<Log> {
 
     Result outletsPage(Integer pageNum, Integer pageSize, String sort, String sortType, String startTime, String endTime);
 
+    Result uploadOrSoldDays(String choose, String upOrSold);
 }

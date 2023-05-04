@@ -3,9 +3,7 @@ package com.Nirlvy.Newbackend.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.Nirlvy.Newbackend.common.Result;
 import com.Nirlvy.Newbackend.common.ResultCode;
-import com.Nirlvy.Newbackend.entity.Log;
-import com.Nirlvy.Newbackend.entity.Product;
-import com.Nirlvy.Newbackend.entity.UpdateProductDTO;
+import com.Nirlvy.Newbackend.entity.*;
 import com.Nirlvy.Newbackend.exception.ServiceException;
 import com.Nirlvy.Newbackend.mapper.ProductMapper;
 import com.Nirlvy.Newbackend.service.IFreezerService;
@@ -17,7 +15,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -41,57 +38,41 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     @Override
-    public Double getTotal(String device, String name, Integer count) {
-        return getOne(new QueryWrapper<Product>()
-                .eq("Name", name)
-                .eq("Device", device))
-                .getPrice() * count;
-    }
-
-    @Override
-    public Product getTotalAndSeType(String device, String type) {
-        return getOne(new QueryWrapper<Product>()
-                .like("Type", type)
-                .eq("Device", device)
-                .select("Price,Type,SeType,Device")
-                .groupBy("Price,Type,SeType"));
-    }
-
-    @Override
     public List<Map<String, Object>> getPTD(String type) {
         QueryWrapper<Product> wrapper = new QueryWrapper<>();
         if (type != null) {
-            wrapper.like("Type", type);
+            wrapper.like("type", type);
         }
         return listMaps(wrapper
-                .select("Price, Type, Device")
-                .groupBy("Price, Type, Device"));
+                .select("price, type, device")
+                .groupBy("price, type, device"));
     }
 
     @Override
     public Result updateData(UpdateProductDTO updateProductDTO) {
-        if (BeanUtil.hasNullField(updateProductDTO)) {
+        if (BeanUtil.hasNullField(updateProductDTO, "img")) {
             throw new ServiceException(ResultCode.INVALID_PARAMS, null);
         }
         if (getOne(new QueryWrapper<Product>()
-                .eq("Name", updateProductDTO.getName())
-                .eq("Device", updateProductDTO.getDevice()).last("limit 1")) == null) {
+                .eq("type", updateProductDTO.getType())
+                .eq("device", updateProductDTO.getDevice())) == null) {
             throw new ServiceException(ResultCode.UNKNOWN_PRODUCT_AND_FREEZER, null);
         }
         Integer count = getOne(new QueryWrapper<Product>()
-                .eq("Device", updateProductDTO.getDevice())
-                .eq("Name", updateProductDTO.getName()))
+                .eq("device", updateProductDTO.getDevice())
+                .eq("type", updateProductDTO.getType()))
                 .getCount();
         if (updateProductDTO.getPriceOrCount() ? updateProductDTO.getNum() <= 0 : updateProductDTO.getNum() + count < 0) {
             throw new ServiceException(ResultCode.INVALID_PARAMS, null);
         }
         Log log = new Log();
+        log.setIo(updateProductDTO.getPriceOrCount() ? null : updateProductDTO.getNum() > 0);
         log.setDevice(updateProductDTO.getDevice());
-        log.setType(getOne(new QueryWrapper<Product>().eq("name", updateProductDTO.getName())).getType());
-        log.setTime(LocalDateTime.parse(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
+        log.setType(updateProductDTO.getType());
+        log.setTime(LocalDateTime.now());
         log.setCpeople(updateProductDTO.getCpeople());
         log.setPrice(updateProductDTO.getPriceOrCount() ? updateProductDTO.getNum() : null);
-        log.setCount(updateProductDTO.getPriceOrCount() ? null : updateProductDTO.getNum().intValue());
+        log.setCount(updateProductDTO.getPriceOrCount() ? null : Math.abs(updateProductDTO.getNum().intValue()));
         Product product = new Product();
         if (updateProductDTO.getPriceOrCount()) {
             product.setPrice(updateProductDTO.getNum());
@@ -101,8 +82,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         try {
             logService.save(log);
             update(product, new QueryWrapper<Product>()
-                    .eq("Device", updateProductDTO.getDevice())
-                    .eq("Name", updateProductDTO.getName()));
+                    .eq("device", updateProductDTO.getDevice())
+                    .eq("type", updateProductDTO.getType()));
+            Freezer freezer = freezerService.getById(updateProductDTO.getDevice());
+            freezer.setSupplyTime(LocalDateTime.now());
+            freezerService.updateById(freezer);
         } catch (Exception e) {
             throw new ServiceException(ResultCode.SYSTEM_ERROR, e);
         }
@@ -110,21 +94,34 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     @Override
-    public Result add(Product product) {
-        String name = product.getName();
+    public Result add(AddProductDTO product) {
+        if (BeanUtil.hasNullField(product, "id")) {
+            throw new ServiceException(ResultCode.INVALID_PARAMS, null);
+        }
+        String type = product.getType();
         String device = product.getDevice();
-        try {
-            if (freezerService.getById(device) != null) {
-                if (getOne(new QueryWrapper<Product>().eq("Name", name).eq("Device", device)) != null) {
-                    save(product);
-                } else {
-                    throw new ServiceException(ResultCode.PRODUCT_ALREADY_EXISTS, null);
-                }
+        if (freezerService.getById(device) != null) {
+            if (getOne(new QueryWrapper<Product>().eq("type", type).eq("device", device)) == null) {
+                Product one = new Product();
+                BeanUtil.copyProperties(product, one, true);
+                save(one);
+                Log log = new Log();
+                log.setIo(true);
+                log.setDevice(device);
+                log.setPrice(product.getPrice());
+                log.setType(type);
+                log.setCount(product.getCount());
+                log.setTime(LocalDateTime.now());
+                log.setCpeople(product.getCpeople());
+                logService.save(log);
+                Freezer freezer = freezerService.getById(device);
+                freezer.setSupplyTime(LocalDateTime.now());
+                freezerService.updateById(freezer);
             } else {
-                throw new ServiceException(ResultCode.UNKNOWN_FREEZER, null);
+                throw new ServiceException(ResultCode.PRODUCT_ALREADY_EXISTS, null);
             }
-        } catch (Exception e) {
-            throw new ServiceException(ResultCode.SYSTEM_ERROR, e);
+        } else {
+            throw new ServiceException(ResultCode.UNKNOWN_FREEZER, null);
         }
         return Result.success();
     }

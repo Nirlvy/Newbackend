@@ -1,6 +1,5 @@
 package com.Nirlvy.Newbackend.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,19 +7,16 @@ import lombok.Setter;
 @Setter
 public class UpdateProductDTO {
 
-    @JsonProperty("priceOrCount")
     private Boolean priceOrCount;
 
-    @JsonProperty("num")
     private Double num;
 
-    @JsonProperty("name")
-    private String name;
+    private String type;
 
-    @JsonProperty("device")
+    private String img;
+
     private String device;
 
-    @JsonProperty("cpeople")
     private String cpeople;
 
 }

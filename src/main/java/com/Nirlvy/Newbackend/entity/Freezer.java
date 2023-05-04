@@ -1,7 +1,7 @@
 package com.Nirlvy.Newbackend.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -15,8 +15,7 @@ import java.time.LocalDateTime;
  * @author Nirlvy
  * @since 2023-04-07
  */
-@Getter
-@Setter
+@Data
 public class Freezer implements Serializable {
 
     @Serial
@@ -38,7 +37,9 @@ public class Freezer implements Serializable {
 
     private String img;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime deployTime;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime supplyTime;
 }
