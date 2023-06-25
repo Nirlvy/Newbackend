@@ -270,14 +270,15 @@ public class LogServiceImpl extends ServiceImpl<LogMapper, Log> implements ILogS
     }
 
     @Override
-    public Result uploadOrSoldDays(String choose, String upOrSold) {
+    public Result uploadOrSoldDays(String choose, Boolean upOrSold) {
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
         if (Objects.equals(choose, "month")) {
             int month = calendar.get(Calendar.MONTH) + 1;
             QueryWrapper<Log> wrapper = new QueryWrapper<>();
             wrapper.apply("YEAR(time) = {0} and MONTH(time) = {1}", year, month);
-            wrapper.eq("iO", upOrSold)
+            wrapper.eq(upOrSold != null, "iO", upOrSold)
+                    .isNull(upOrSold == null, "iO")
                     .select("DAY(time) as day", "count(*) as count")
                     .groupBy("DAY(time)");
             List<Map<String, Object>> list = listMaps(wrapper);
@@ -294,7 +295,8 @@ public class LogServiceImpl extends ServiceImpl<LogMapper, Log> implements ILogS
         } else {
             QueryWrapper<Log> wrapper = new QueryWrapper<>();
             wrapper.apply("YEAR(time) = {0}", year);
-            wrapper.eq("iO", upOrSold)
+            wrapper.eq(upOrSold != null, "iO", upOrSold)
+                    .isNull(upOrSold == null, "iO")
                     .select("MONTH(time) as month", "count(*) as count")
                     .groupBy("MONTH(time)");
             List<Map<String, Object>> list = listMaps(wrapper);
@@ -307,6 +309,40 @@ public class LogServiceImpl extends ServiceImpl<LogMapper, Log> implements ILogS
                 sum += count;
             }
             counts[12] = sum;
+            return Result.success(counts);
+        }
+    }
+
+    @Override
+    public Result soldValue(String choose) {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        if (Objects.equals(choose, "month")) {
+            int month = calendar.get(Calendar.MONTH) + 1;
+            QueryWrapper<Log> wrapper = new QueryWrapper<>();
+            wrapper.apply("YEAR(time) = {0} and MONTH(time) = {1}", year, month);
+            wrapper.select("DAY(time) as day", "count(*) * price as price")
+                    .groupBy("DAY(time),price");
+            List<Map<String, Object>> list = listMaps(wrapper);
+            double[] counts = new double[31];
+            for (Map<String, Object> map : list) {
+                int day = (int) map.get("day");
+                double count = (Double) map.get("price");
+                counts[day - 1] = count;
+            }
+            return Result.success(counts);
+        } else {
+            QueryWrapper<Log> wrapper = new QueryWrapper<>();
+            wrapper.apply("YEAR(time) = {0}", year);
+            wrapper.select("MONTH(time) as month", "count(*) * price as price")
+                    .groupBy("MONTH(time),price");
+            List<Map<String, Object>> list = listMaps(wrapper);
+            double[] counts = new double[12];
+            for (Map<String, Object> map : list) {
+                int month = (int) map.get("month");
+                double count = (Double) map.get("price");
+                counts[month - 1] = count;
+            }
             return Result.success(counts);
         }
     }

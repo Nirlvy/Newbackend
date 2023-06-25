@@ -50,7 +50,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Override
     public Result updateData(UpdateProductDTO updateProductDTO) {
-        if (BeanUtil.hasNullField(updateProductDTO, "img")) {
+        if (BeanUtil.hasNullField(updateProductDTO, "img", "cpeople")) {
             throw new ServiceException(ResultCode.INVALID_PARAMS, null);
         }
         if (getOne(new QueryWrapper<Product>()
@@ -71,7 +71,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         log.setType(updateProductDTO.getType());
         log.setTime(LocalDateTime.now());
         log.setCpeople(updateProductDTO.getCpeople());
-        log.setPrice(updateProductDTO.getPriceOrCount() ? updateProductDTO.getNum() : null);
+        log.setPrice(updateProductDTO.getPriceOrCount() ? updateProductDTO.getNum() : getOne(new QueryWrapper<Product>().eq("device", updateProductDTO.getDevice()).eq("type", updateProductDTO.getType())).getPrice());
         log.setCount(updateProductDTO.getPriceOrCount() ? null : Math.abs(updateProductDTO.getNum().intValue()));
         Product product = new Product();
         if (updateProductDTO.getPriceOrCount()) {

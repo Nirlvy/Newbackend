@@ -252,8 +252,37 @@ public class LogController {
                                    @RequestParam String choose,
                                    @Parameter(description = "修改或上架或售出", example = "true",
                                            schema = @Schema(allowableValues = {"true", "false"}))
-                                   @RequestParam String upOrSold) {
+                                   @RequestParam(required = false) Boolean upOrSold) {
         return logService.uploadOrSoldDays(choose, upOrSold);
+    }
+
+    @Operation(summary = "销售额")
+    @ApiResponse(responseCode = "200", description = "成功", content = {
+            @Content(mediaType = "application/json", schema = @Schema(example = """
+                    {
+                         "code": 200,
+                         "msg": "成功",
+                         "data": [
+                           0,
+                           0,
+                           0,
+                           1,
+                           3,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0,
+                           0
+                         ]
+                       }"""))
+    })
+    @GetMapping("/soldValue")
+    public Result soldValue(@Parameter(description = "月或年", example = "month",
+            schema = @Schema(allowableValues = {"month", "year"}), required = true)
+                            @RequestParam String choose) {
+        return logService.soldValue(choose);
     }
 
 }

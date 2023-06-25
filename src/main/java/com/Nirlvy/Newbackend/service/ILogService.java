@@ -26,5 +26,7 @@ public interface ILogService extends IService<Log> {
 
     Result outletsPage(Integer pageNum, Integer pageSize, String sort, String sortType, String startTime, String endTime);
 
-    Result uploadOrSoldDays(String choose, String upOrSold);
+    Result uploadOrSoldDays(String choose, Boolean upOrSold);
+
+    Result soldValue(String choose);
 }
